@@ -1,0 +1,35 @@
+name: Otus Final Project banners-rotation
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Linters
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: v1.64.8    
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Unit test project
+        run: make test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Build project
+        run: make build
