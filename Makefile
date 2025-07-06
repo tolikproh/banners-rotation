@@ -1,6 +1,3 @@
-include .env
-export
-
 BIN := "./bin/banners"
 
 BANNERS_IMG="banners:develop"
