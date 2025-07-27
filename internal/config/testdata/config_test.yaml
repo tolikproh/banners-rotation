@@ -1,0 +1,15 @@
+httpserver:
+    host: banners.ru
+    port: 8000
+
+logger:
+    # level: info, debug, warn, error
+    level: error
+
+storage:
+    conn: postgres://user:password@localhost:5432/banners_db?sslmode=disable
+    
+rabbitmq:
+    address: amqp://test:pswd@127.0.0.1:5561/
+    exchange: banners_exchange_config
+    queue: banners_queue_config

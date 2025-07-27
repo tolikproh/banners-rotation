@@ -1,0 +1,78 @@
+networks:
+  localnet:
+    driver: bridge
+
+services:
+  pg:
+    image: postgres:17.5-alpine
+    container_name: banners-pg
+    restart: always
+    ports:
+      - 5417:5432
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: /var/lib/postgresql/data/banners
+    volumes:
+      - ./migrations/initdb:/docker-entrypoint-initdb.d
+    networks:
+      - localnet
+
+  rabbit:
+    image: rabbitmq:4.1.2-management
+    container_name: banners-rabbit
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      - localnet
+
+  migrations:
+    container_name: banners-migrations
+    build:
+      context: .
+      dockerfile: ./build/migrations/Dockerfile
+    depends_on:
+      - pg
+    restart: on-failure
+    environment:
+      GOOSE_DRIVER: ${GOOSE_DRIVER}
+      GOOSE_DBSTRING: ${BANNERS_STORAGE_CONN}
+    networks:
+      - localnet
+    command: [ "/bin/goose", "up" ]
+  
+  banners:
+    container_name: banners-app
+    build:
+      context: .
+      dockerfile: ./build/app/Dockerfile
+    restart: always
+    depends_on:
+      - pg
+      - rabbit
+    ports:
+      - 8000:8000
+    environment:
+      BANNERS_HTTP_SERVER_HOST: ${BANNERS_HTTP_SERVER_HOST}
+      BANNERS_HTTP_SERVER_PORT: ${BANNERS_HTTP_SERVER_PORT}
+      BANNERS_LOG_LEVEL: ${BANNERS_LOG_LEVEL}
+      BANNERS_STORAGE_CONN: ${BANNERS_STORAGE_CONN}
+      BANNERS_RABBITMQ_ADDRESS: ${BANNERS_RABBITMQ_ADDRESS}
+      BANNERS_RABBITMQ_EXCHANGE: ${BANNERS_RABBITMQ_EXCHANGE}
+      BANNERS_RABBITMQ_QUEUE: ${BANNERS_RABBITMQ_QUEUE}
+    networks:
+      - localnet
+    command: ["/opt/banners/banners"]
+
+  tests:
+    container_name: banners-tests
+    build:
+      context: .
+      dockerfile: ./build/tests/Dockerfile
+    ports:
+      - 8000:8000
+    networks:
+      - localnet      

@@ -1,0 +1,32 @@
+FROM golang:1.23 AS build
+
+ENV BIN_FILE=/opt/banners/banners
+ENV CODE_DIR=/go/src/
+
+WORKDIR ${CODE_DIR}
+
+COPY go.mod ./
+COPY go.sum ./
+RUN go mod download
+
+COPY . ${CODE_DIR}
+
+ARG LDFLAGS
+RUN CGO_ENABLED=0 go build \
+    -ldflags "${LDFLAGS}" \
+    -o ${BIN_FILE} ./cmd/banners
+
+# Образ
+FROM alpine:3.22
+
+LABEL ORGANIZATION="OTUS Final Project"
+LABEL SERVICE="banners-rotation"
+LABEL MAINTAINERS="tolikproh@gmail.com"
+
+ENV BIN_FILE=/opt/banners/banners
+COPY --from=build ${BIN_FILE} ${BIN_FILE}
+
+ENV CONFIG_FILE=/etc/banners/config.yaml
+COPY configs/config.yaml ${CONFIG_FILE}
+
+CMD ${BIN_FILE} --config ${CONFIG_FILE}
