@@ -1,0 +1,15 @@
+httpserver:
+    host: 127.0.0.1
+    port: 8000
+
+logger:
+    # level: info, debug, warn, error
+    level: debug
+
+storage:
+    conn: postgres://postgres:postgres@localhost:5432/banners
+    
+rabbitmq:
+    address: amqp://guest:guest@localhost:5672/
+    exchange: banners-rotation
+    queue: banners-rotation
